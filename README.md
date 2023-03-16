@@ -1,4 +1,4 @@
-The folder ./src contains the files where solutions where completed.
+The folder ./src contains the files where solutions were completed.
 
 ./src/invoice.json --> is an invoice that needs to be used into the problem # 2. This is a json file.
 ./src/invoice_data.edn --> is an invoice that needs to be used into the problem # 1. This is an edn file.
