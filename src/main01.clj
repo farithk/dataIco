@@ -31,7 +31,7 @@
 ; (2) The following item has to be included because it only contains :retention/rate equal to 1
 ; but the tax/rate is different to 19, So this satisfy the fact that must satisfy EXACTLY one
 ; of the above two conditions; and this satisfy one of them (:ret\_fuente 1%.):
-; {:invoice-item/id          "ii1"
+; {:invoice-item/id          "ii6"
 ;                    :invoice-item/sku         "SKU 1"
 ;                    :taxable/taxes            [{:tax/id       "t1"
 ;                                                :tax/category :iva
@@ -77,40 +77,36 @@
   (let [items (:invoice/items invoice-data)]                ;extract items from invoice-data
     (filter
       (fn [item]
-        (let [taxes (:taxable/taxes item)
-              retentions (:retentionable/retentions item)]  ;we extract taxes and retention from :taxable/taxes and :retentionable/retentions
-          (not (and (some #(= (:tax/rate %) tax-rate) taxes)  (some #(= (:retention/rate %) retention-rate) retentions)))
-          ; We use the operator and to check if both tax and retention are equal to 19 and 1 respectively.
-          ; if they are not equal we return a true value and item is included in the result.
+        (let
+              [taxes (:taxable/taxes item)
+               retentions (:retentionable/retentions item)
+               ;functions to be evaluated
+               tax-function-to-evaluate #(= (:tax/rate %) tax-rate)
+               retention-function-to-evaluate #(= (:retention/rate %) retention-rate)
+               ;check if there is a tax values equal to 19
+               tax-checked (some tax-function-to-evaluate taxes)
+               ;check if there is a retention values equal to 1
+               retention-checked (some retention-function-to-evaluate retentions)
+               ]
+          (and
+            (not (and tax-checked retention-checked))
+            (or tax-checked retention-checked)
+            )
           )
         )
       items)
     )
   )
 
-;*********************************************************************************
-; filter-by-taxes-and-retention-values is a function that filters items
-; keeping in mind that :tax/rate needs to b e equal to 19 and :retention/rate
-; needs to be equal to 19.
-(defn filter-by-taxes-and-retention-values [items tax-rate retention-rate] ;as input, we need items, tax and retention rate
-  (filter
-    (fn [item]
-      (let [taxes (:taxable/taxes item)
-            retentions (:retentionable/retentions item)] ;extract taxes and retention from :taxable/taxes and :retentionable/retentions
-        (or (some #(= (:tax/rate %) tax-rate) taxes) (some #(= (:retention/rate %) retention-rate) retentions))
-        ; here we use the or operator to check if one of the rates are equal to theirs specific values
-        )
-      )
-    items))
-
 ;******************************************************************************
 
 (defn print-filtered-items [_]
   (let [resulting-items (filter-items-with-either-tax-or-retention 19 1) ;Calling filter-items-with-either-tax-or-retention with tax rate 19 and retention rate 1, and stores the result in resulting-items
-        filtered-items-by-values (filter-by-taxes-and-retention-values resulting-items 19 1)] ; Calling filter-by-taxes-and-retention-values with the resulting-items, tax rate 19, and retention rate 1, and stores the result in filtered-items-by-values.
-    (println (doall filtered-items-by-values))              ;Printing the filtered-items-by-values to the console.
+        ;filtered-items-by-values (filter-by-taxes-and-retention-values resulting-items 19 1)
+        ]                                                   ; Calling filter-by-taxes-and-retention-values with the resulting-items, tax rate 19, and retention rate 1, and stores the result in filtered-items-by-values.
+    (println (doall resulting-items))              ;Printing the filtered-items-by-values to the console.
     ))
 
 ; to run using REPL
 ; (1) (in-ns 'main01) --> to be sure that we are on main01 namespace
-; (2) (main01/print-filtered-items? nil)
+; (2) (main01/print-filtered-items nil)
